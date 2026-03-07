@@ -1,0 +1,6 @@
+@PRN_Jira_HostAddress = http://localhost:5183
+
+GET {{PRN_Jira_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
