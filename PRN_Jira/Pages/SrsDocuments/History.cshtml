@@ -1,0 +1,247 @@
+@page
+@model PRN_Jira.Pages.SrsDocuments.HistoryModel
+@{
+    ViewData["Title"] = "SRS History";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-0">SRS Version History</h2>
+        @* Account hiện chỉ có Username *@
+        @if (Model.Account is not null)
+        {
+            <div class="text-muted small">
+                @Model.Account.Username
+            </div>
+        }
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-secondary" asp-page="/SrsDocuments/Index">Back</a>
+        @if (Model.SelectedDoc is not null)
+        {
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-download-srs"
+                    data-url="@Url.Page("/SrsDocuments/History", "DownloadPdf", new { versionNumber = Model.SelectedDoc.VersionNumber })"
+                    data-filename="SRS_v@(Model.SelectedDoc.VersionNumber).pdf">
+                Download SRS
+            </button>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else if (Model.Account is null)
+{
+    <div class="alert alert-warning mb-0">Không tìm thấy account.</div>
+}
+else if (Model.Versions.Count == 0)
+{
+    <div class="alert alert-info mb-0">Account này chưa có version SRS nào.</div>
+}
+else
+{
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Chọn phiên bản (VersionNumber)</label>
+            <select class="form-select" name="versionNumber" onchange="this.form.submit()">
+                @foreach (var v in Model.Versions)
+                {
+                    <option value="@v.VersionNumber" selected="@(v.VersionNumber == Model.SelectedVersionNumber)">
+                        v@v.VersionNumber — @v.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") — @v.Description
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">View</button>
+                <a class="btn btn-outline-secondary"
+                   asp-page="/SrsDocuments/History"
+                   >
+                    Latest
+                </a>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.SelectedDoc is null || Model.Snapshot is null)
+    {
+        <div class="alert alert-warning">Không tìm thấy version đã chọn.</div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <div>
+                        <div class="fw-semibold">Version v@Model.SelectedDoc.VersionNumber</div>
+                        <div class="text-muted small">
+                            Created: @Model.SelectedDoc.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")<br />
+                            Snapshot taken: @Model.Snapshot.SnapshotTakenAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                        </div>
+                    </div>
+                    <div class="text-muted small text-end">
+                        @Model.SelectedDoc.Description
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title mb-2">Project info</h5>
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-3">Project Id</dt>
+                    <dd class="col-sm-9">@Model.Snapshot.ProjectId</dd>
+                    <dt class="col-sm-3">Project Key</dt>
+                    <dd class="col-sm-9">@Model.Snapshot.ProjectKey</dd>
+                    <dt class="col-sm-3">Counts</dt>
+                    <dd class="col-sm-9">
+                        Releases: @Model.Snapshot.Releases.Count,
+                        Epics: @Model.Snapshot.Epics.Count,
+                        User stories: @Model.Snapshot.UserStories.Count
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Releases</div>
+            <div class="card-body p-0">
+                @if (Model.Snapshot.Releases.Count == 0)
+                {
+                    <div class="p-3 small text-muted">No releases.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Release date</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var r in Model.Snapshot.Releases)
+                            {
+                                <tr>
+                                    <td>@r.Name</td>
+                                    <td>@r.Status</td>
+                                    <td>@(r.ReleaseDate ?? "—")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">Epics</div>
+            <div class="card-body p-0">
+                @if (Model.Snapshot.Epics.Count == 0)
+                {
+                    <div class="p-3 small text-muted">No epics.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Summary</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var e in Model.Snapshot.Epics)
+                            {
+                                <tr>
+                                    <td>@e.Key</td>
+                                    <td>@e.Summary</td>
+                                    <td>@e.Status</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header fw-semibold">User stories</div>
+            <div class="card-body p-0">
+                @if (Model.Snapshot.UserStories.Count == 0)
+                {
+                    <div class="p-3 small text-muted">No user stories.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Summary</th>
+                                <th>Status</th>
+                                <th>Epic</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var s in Model.Snapshot.UserStories)
+                            {
+                                <tr>
+                                    <td>@s.Key</td>
+                                    <td>@s.Summary</td>
+                                    <td>@s.Status</td>
+                                    <td>@(s.EpicKey ?? "—")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+
+@section Scripts
+{
+    <script>
+        (function () {
+            var btn = document.getElementById('btn-download-srs');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-url');
+                var filename = btn.getAttribute('data-filename') || 'SRS.pdf';
+                if (!url) return;
+                btn.disabled = true;
+                fetch(url, { credentials: 'include' })
+                    .then(function (r) {
+                        if (!r.ok) throw new Error('Download failed');
+                        return r.blob();
+                    })
+                    .then(function (blob) {
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(a.href);
+                    })
+                    .catch(function () { alert('Tải file thất bại.'); })
+                    .finally(function () { btn.disabled = false; });
+            });
+        })();
+    </script>
+}
+

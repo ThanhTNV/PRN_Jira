@@ -1,0 +1,47 @@
+@page "/Projects/Edit/{id:guid}"
+@model PRN_Jira.Pages.Projects.EditModel
+@{
+    ViewData["Title"] = "Edit Project";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-3">Edit Jira Project</h2>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Error))
+        {
+            <div class="alert alert-danger">@Model.Error</div>
+        }
+        @if (Model.Project is null)
+        {
+            <div class="alert alert-warning">Project không tồn tại.</div>
+            <a class="btn btn-outline-secondary" asp-page="Index">Back</a>
+        }
+        else
+        {
+            <form method="post" class="card">
+                <input type="hidden" asp-for="Id" />
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Jira Base URL</label>
+                            <input class="form-control" asp-for="Input.JiraBaseUrl" placeholder="https://your-domain.atlassian.net" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Jira Email</label>
+                            <input class="form-control" asp-for="Input.JiraEmail" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Jira Project Id/Key</label>
+                            <input class="form-control" asp-for="Input.JiraProjectId" placeholder="VD: PRN" />
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button class="btn btn-primary" type="submit">Save</button>
+                        <a class="btn btn-outline-secondary" asp-page="Index">Back</a>
+                    </div>
+                </div>
+            </form>
+        }
+    </div>
+</div>

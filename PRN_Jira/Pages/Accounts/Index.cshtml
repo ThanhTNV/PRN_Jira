@@ -1,0 +1,62 @@
+@page
+@model PRN_Jira.Pages.Accounts.IndexModel
+@{
+    ViewData["Title"] = "Accounts";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-0">My Account</h2>
+        <div class="text-muted small">Thông tin tài khoản đang đăng nhập.</div>
+    </div>
+</div>
+
+@if (Model.Account is null)
+{
+    <div class="alert alert-warning mb-0">Không tìm thấy account.</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Username</dt>
+                <dd class="col-sm-9">@Model.Account.Username</dd>
+
+                <dt class="col-sm-3">Created</dt>
+                <dd class="col-sm-9">@Model.Account.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+
+                <dt class="col-sm-3">Jira</dt>
+                <dd class="col-sm-9">
+                    <div>Token: <span class="text-muted">@(string.IsNullOrWhiteSpace(Model.Account.JiraAccessToken) ? "(empty)" : "********")</span></div>
+                </dd>
+
+                <dt class="col-sm-3">Projects</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Projects.Count == 0)
+                    {
+                        <div class="text-muted small">(no projects)</div>
+                    }
+                    else
+                    {
+                        <ul class="mb-0">
+                            @foreach (var p in Model.Projects)
+                            {
+                                <li>
+                                    <span class="fw-semibold">@p.JiraProjectId</span>
+                                    <span class="text-muted">(@p.JiraBaseUrl, @p.JiraEmail)</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    <div>Token: <span class="text-muted">@(string.IsNullOrWhiteSpace(Model.Account.JiraAccessToken) ? "(empty)" : "********")</span></div>
+                </dd>
+            </dl>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <a class="btn btn-primary" asp-page="/Jira/Setup">Update Jira Setup</a>
+            <a class="btn btn-outline-primary" asp-page="/SrsDocuments/Index">SRS</a>
+        </div>
+    </div>
+}
+

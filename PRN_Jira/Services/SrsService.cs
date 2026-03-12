@@ -19,26 +19,43 @@ public class SrsService : ISrsService
 
     public async Task<SrsVersionItemDto> CreateSnapshotAsync(Guid accountId, string description)
     {
-        var account = await _db.Accounts.FindAsync(accountId)
+        var account = await _db.Accounts
+            .Include(a => a.Projects)
+            .FirstOrDefaultAsync(a => a.Id == accountId)
             ?? throw new InvalidOperationException("Account not found.");
 
-        // Fetch Jira data
+        var project = account.Projects.FirstOrDefault()
+            ?? throw new InvalidOperationException("No Jira project configured for this account.");
+
+        return await CreateSnapshotAsync(accountId, project.Id, description);
+    }
+
+    public async Task<SrsVersionItemDto> CreateSnapshotAsync(Guid accountId, Guid projectId, string description)
+    {
+        var account = await _db.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId)
+            ?? throw new InvalidOperationException("Account not found.");
+
+        var project = await _db.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.AccountId == accountId)
+            ?? throw new InvalidOperationException("Project not found for this account.");
+
         var snapshot = await _jiraService.GetProjectSnapshotAsync(
-            account.JiraBaseUrl,
-            account.JiraEmail,
+            project.JiraBaseUrl,
+            project.JiraEmail,
             account.JiraAccessToken,
-            account.JiraProjectId);
+            project.JiraProjectId);
 
-        snapshot.ProjectKey = account.JiraProjectId;
+        snapshot.ProjectKey = project.JiraProjectId;
 
-        // Determine next version number
         var maxVersion = await _db.SrsDocuments
-            .Where(d => d.AccountId == accountId)
+            .Where(d => d.ProjectId == project.Id)
             .MaxAsync(d => (int?)d.VersionNumber) ?? 0;
 
         var doc = new SrsDocument
         {
             AccountId = accountId,
+            ProjectId = project.Id,
             VersionNumber = maxVersion + 1,
             Description = description,
             SnapshotJson = JsonSerializer.Serialize(snapshot),

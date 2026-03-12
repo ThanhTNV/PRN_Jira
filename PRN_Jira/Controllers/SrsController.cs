@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PRN_Jira.Data;
 using PRN_Jira.DTOs.Srs;
 using PRN_Jira.Services;
@@ -86,8 +87,12 @@ public class SrsController : ControllerBase
         if (detail == null)
             return NotFound(new { message = "SRS version not found." });
 
-        var account = await _db.Accounts.FindAsync(accountId);
-        var pdfBytes = _pdfService.GenerateSrsPdf(detail, account?.JiraProjectId ?? "");
+        var project = await _db.Projects
+            .Where(p => p.AccountId == accountId)
+            .OrderBy(p => p.JiraProjectId)
+            .FirstOrDefaultAsync();
+
+        var pdfBytes = _pdfService.GenerateSrsPdf(detail, project?.JiraProjectId ?? "");
         var fileName = $"SRS_v{detail.VersionNumber}_{DateTime.UtcNow:yyyyMMdd}.pdf";
 
         return File(pdfBytes, "application/pdf", fileName);
@@ -105,8 +110,12 @@ public class SrsController : ControllerBase
         if (detail == null)
             return NotFound(new { message = "No SRS versions found." });
 
-        var account = await _db.Accounts.FindAsync(accountId);
-        var pdfBytes = _pdfService.GenerateSrsPdf(detail, account?.JiraProjectId ?? "");
+        var project = await _db.Projects
+            .Where(p => p.AccountId == accountId)
+            .OrderBy(p => p.JiraProjectId)
+            .FirstOrDefaultAsync();
+
+        var pdfBytes = _pdfService.GenerateSrsPdf(detail, project?.JiraProjectId ?? "");
         var fileName = $"SRS_v{detail.VersionNumber}_latest_{DateTime.UtcNow:yyyyMMdd}.pdf";
 
         return File(pdfBytes, "application/pdf", fileName);

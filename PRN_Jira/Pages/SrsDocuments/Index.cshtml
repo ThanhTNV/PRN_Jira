@@ -1,0 +1,90 @@
+@page
+@model PRN_Jira.Pages.SrsDocuments.IndexModel
+@{
+    ViewData["Title"] = "SRS Documents";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-0">SRS Documents</h2>
+        <div class="text-muted small">Chọn project rồi xem danh sách phiên bản SRS.</div>
+    </div>
+    @if (Model.HasAnyProjectWithId)
+    {
+        <form method="post" asp-page-handler="CreateSnapshot" class="d-flex gap-2">
+            <input type="hidden" name="SelectedProjectId" value="@Model.SelectedProjectId" />
+            <input class="form-control form-control-sm" style="width: 260px"
+                   asp-for="NewDescription" placeholder="Description cho snapshot mới" />
+            <button class="btn btn-sm btn-success" type="submit">Create snapshot</button>
+        </form>
+    }
+</div>
+
+@if (Model.Projects.Count == 0)
+{
+    <div class="alert alert-info mb-0">
+        Chưa có project nào. Vui lòng vào <a asp-page="/Projects/Index">Projects</a> để tạo project và nhập Jira Project Id/Key.
+    </div>
+}
+else if (!Model.HasAnyProjectWithId)
+{
+    <div class="alert alert-warning mb-0">
+        Bạn chưa nhập Jira Project Id/Key cho project nào. Vui lòng vào <a asp-page="/Projects/Index">Projects</a> → Chỉnh sửa project để nhập Jira Project Id/Key.
+    </div>
+}
+else
+{
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Project</label>
+            <select class="form-select" name="SelectedProjectId" onchange="this.form.submit()">
+                @foreach (var p in Model.Projects)
+                {
+                    <option value="@p.Id" selected="@(p.Id == Model.SelectedProjectId)">
+                        @p.JiraProjectId — @p.JiraBaseUrl (@p.JiraEmail)
+                    </option>
+                }
+            </select>
+        </div>
+    </form>
+
+    if (Model.Versions.Count == 0)
+    {
+        <div class="alert alert-info mb-0">
+            Project này chưa có version nào. Hãy tạo snapshot SRS (API) trước.
+        </div>
+    }
+    else
+    {
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>Version</th>
+                <th>Description</th>
+                <th>Created</th>
+                <th class="text-end">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var v in Model.Versions)
+            {
+                <tr>
+                    <td class="text-nowrap fw-semibold">v@v.VersionNumber</td>
+                    <td>@v.Description</td>
+                    <td class="text-nowrap">@v.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary"
+                           asp-page="/SrsDocuments/History"
+                           asp-route-versionNumber="@v.VersionNumber">
+                            View
+                        </a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+}
+

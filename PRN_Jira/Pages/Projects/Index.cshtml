@@ -1,0 +1,55 @@
+@page
+@model PRN_Jira.Pages.Projects.IndexModel
+@{
+    ViewData["Title"] = "Projects";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h2 class="mb-0">My Jira Projects</h2>
+        <div class="text-muted small">Mỗi project mapping với 1 Jira ProjectId.</div>
+    </div>
+    <a class="btn btn-primary" asp-page="Create">New Project</a>
+</div>
+
+@if (Model.Projects.Count == 0)
+{
+    <div class="alert alert-info mb-0">
+        Chưa có project nào. Hãy tạo project đầu tiên để có thể tạo SRS snapshot.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>Project Id/Key</th>
+                <th>Base URL</th>
+                <th>Email</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var p in Model.Projects)
+            {
+                <tr>
+                    <td class="fw-semibold">@p.JiraProjectId</td>
+                    <td>@p.JiraBaseUrl</td>
+                    <td>@p.JiraEmail</td>
+                    <td class="text-nowrap">@p.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
+                        <form method="post" asp-page-handler="Delete" class="d-inline ms-1">
+                            <input type="hidden" name="id" value="@p.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa project này? Các SRS snapshot của project cũng sẽ bị xóa.');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+

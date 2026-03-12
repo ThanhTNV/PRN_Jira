@@ -1,0 +1,48 @@
+@page
+@model PRN_Jira.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="p-4 p-md-5 mb-4 rounded text-bg-dark">
+    <div class="col-lg-8 px-0">
+        <h1 class="display-6">PRN_Jira UI</h1>
+        <p class="lead my-3">
+            Bạn phải login/register, sau đó setup Jira để dùng các chức năng Jira/SRS.
+        </p>
+        <p class="lead mb-0">
+            @if (User?.Identity?.IsAuthenticated ?? false)
+            {
+                <a class="btn btn-primary" asp-page="/Jira/Setup">Jira Setup</a>
+                <a class="btn btn-outline-light ms-2" asp-page="/SrsDocuments/Index">SRS</a>
+            }
+            else
+            {
+                <a class="btn btn-primary" asp-page="/Auth/Login">Login</a>
+                <a class="btn btn-outline-light ms-2" asp-page="/Auth/Register">Register</a>
+            }
+            <a class="btn btn-link text-white ms-2" href="/swagger">Swagger</a>
+        </p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Jira Setup</h5>
+                <p class="card-text">Nhập BaseUrl/Email/Token/ProjectId để bật tính năng Jira.</p>
+                <a class="btn btn-sm btn-outline-primary" asp-page="/Jira/Setup">Open</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">SRS</h5>
+                <p class="card-text">Xem lịch sử phiên bản SRS và chọn phiên bản quá khứ để xem snapshot.</p>
+                <a class="btn btn-sm btn-outline-primary" asp-page="/SrsDocuments/Index">Open</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -28,27 +28,28 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
-            return BadRequest(new { message = "Email and password are required." });
-
-        if (await _db.Accounts.AnyAsync(a => a.Email == dto.Email))
-            return BadRequest(new { message = "An account with this email already exists." });
-
-        if (await _db.Accounts.AnyAsync(a => a.JiraProjectId == dto.JiraProjectId))
-            return BadRequest(new { message = "This Jira project is already linked to another account." });
+        if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
+            return BadRequest(new { message = "Username and password are required." });
 
         var account = new Account
         {
             Username = dto.Username,
-            Email = dto.Email.ToLowerInvariant(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            JiraBaseUrl = dto.JiraBaseUrl.TrimEnd('/'),
-            JiraEmail = dto.JiraEmail,
-            JiraProjectId = dto.JiraProjectId,
             JiraAccessToken = dto.JiraAccessToken,
         };
 
         _db.Accounts.Add(account);
+        await _db.SaveChangesAsync();
+
+        // Create first Jira project for this account
+        var project = new Project
+        {
+            AccountId = account.Id,
+            JiraBaseUrl = dto.JiraBaseUrl.TrimEnd('/'),
+            JiraEmail = dto.JiraEmail,
+            JiraProjectId = dto.JiraProjectId
+        };
+        _db.Projects.Add(project);
         await _db.SaveChangesAsync();
 
         var token = _tokenService.GenerateToken(account);
@@ -56,7 +57,7 @@ public class AuthController : ControllerBase
         {
             Token = token,
             Username = account.Username,
-            Email = account.Email,
+            Email = dto.Email,
             ExpiresAt = _tokenService.GetExpiry()
         });
     }
@@ -67,8 +68,9 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
+        var username = dto.Email.Trim();
         var account = await _db.Accounts
-            .FirstOrDefaultAsync(a => a.Email == dto.Email.ToLowerInvariant());
+            .FirstOrDefaultAsync(a => a.Username == username);
 
         if (account == null || !BCrypt.Net.BCrypt.Verify(dto.Password, account.PasswordHash))
             return Unauthorized(new { message = "Invalid email or password." });
@@ -78,7 +80,7 @@ public class AuthController : ControllerBase
         {
             Token = token,
             Username = account.Username,
-            Email = account.Email,
+            Email = dto.Email,
             ExpiresAt = _tokenService.GetExpiry()
         });
     }

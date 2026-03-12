@@ -12,8 +12,8 @@ using PRN_Jira.Data;
 namespace PRN_Jira.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260307035930_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260312042512_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,14 +34,35 @@ namespace PRN_Jira.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
                     b.Property<string>("JiraAccessToken")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("PRN_Jira.Models.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("JiraBaseUrl")
                         .IsRequired()
@@ -55,24 +76,12 @@ namespace PRN_Jira.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("AccountId", "JiraProjectId")
                         .IsUnique();
 
-                    b.HasIndex("JiraProjectId")
-                        .IsUnique();
-
-                    b.ToTable("Accounts");
+                    b.ToTable("Projects");
                 });
 
             modelBuilder.Entity("PRN_Jira.Models.SrsDocument", b =>
@@ -92,6 +101,9 @@ namespace PRN_Jira.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("SnapshotJson")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -101,10 +113,23 @@ namespace PRN_Jira.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId", "VersionNumber")
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("ProjectId", "VersionNumber")
                         .IsUnique();
 
                     b.ToTable("SrsDocuments");
+                });
+
+            modelBuilder.Entity("PRN_Jira.Models.Project", b =>
+                {
+                    b.HasOne("PRN_Jira.Models.Account", "Account")
+                        .WithMany("Projects")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("PRN_Jira.Models.SrsDocument", b =>
@@ -115,10 +140,25 @@ namespace PRN_Jira.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PRN_Jira.Models.Project", "Project")
+                        .WithMany("SrsDocuments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Account");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("PRN_Jira.Models.Account", b =>
+                {
+                    b.Navigation("Projects");
+
+                    b.Navigation("SrsDocuments");
+                });
+
+            modelBuilder.Entity("PRN_Jira.Models.Project", b =>
                 {
                     b.Navigation("SrsDocuments");
                 });

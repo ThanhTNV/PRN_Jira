@@ -1,0 +1,51 @@
+@page
+@model PRN_Jira.Pages.Jira.SetupModel
+@{
+    ViewData["Title"] = "Jira Setup";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h2 class="mb-0">Jira Setup</h2>
+                <div class="text-muted small">Bắt buộc nhập đủ để dùng chức năng Jira/SRS.</div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Message))
+        {
+            <div class="alert alert-success">@Model.Message</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Error))
+        {
+            <div class="alert alert-danger">@Model.Error</div>
+        }
+
+        <form method="post" class="card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Jira Base URL</label>
+                        <input class="form-control" asp-for="Input.JiraBaseUrl" placeholder="https://your-domain.atlassian.net" />
+                        <div class="form-text">Không có dấu / ở cuối (mình sẽ tự trim).</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Jira Email</label>
+                        <input class="form-control" asp-for="Input.JiraEmail" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Jira Access Token (theo account)</label>
+                        <input class="form-control" asp-for="Input.JiraAccessToken" type="password" />
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                    <a class="btn btn-outline-secondary" asp-page="/Index">Home</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
